@@ -30,10 +30,8 @@ services:
       - flask-app
     networks:
       - proxy
-    extra_hosts:
-      - "flask-app:flask-app"
 
 networks:
-  default:
-    external:
-      name: proxy
+  proxy:
+    name: proxy
+    driver: bridge
