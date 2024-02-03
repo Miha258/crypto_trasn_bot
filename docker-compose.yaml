@@ -9,18 +9,18 @@ services:
       - "5000:5000"
     networks:
       - proxy
-  # nginx:
-  #   image: nginx:latest
-  #   environment:
-  #     - FLASK_APP_DOMAIN=${FLASK_APP_DOMAIN}
-  #   volumes:
-  #     - ./nginx.conf:/etc/nginx/conf.d/default.conf
-  #   ports:
-  #     - "80:80"
-  #   depends_on:
-  #     - flask-app
-  #   networks:
-  #     - proxy
+  nginx:
+    image: nginx:latest
+    environment:
+      - FLASK_APP_DOMAIN=${FLASK_APP_DOMAIN}
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    ports:
+      - "80:80"
+    depends_on:
+      - flask-app
+    networks:
+      - proxy
 
 networks:
   proxy:
