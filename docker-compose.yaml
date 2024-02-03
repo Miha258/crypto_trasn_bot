@@ -34,6 +34,6 @@ services:
       - "flask-app:flask-app"
 
 networks:
-  proxy:
-    name: proxy
-    driver: bridge
+  default:
+    external:
+      name: proxy
