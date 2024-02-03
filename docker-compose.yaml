@@ -4,7 +4,7 @@ services:
   flask-app:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: ./server/Dockerfile
     ports:
       - "5000:5000"
     volumes:
@@ -16,7 +16,7 @@ services:
     command: "python /bot/bot.py"
     volumes:
       - ./bot:/bot
-    working_dir: /bot  # Set the working directory to /bot
+    working_dir: /bot
     networks:
       - proxy
   nginx:
