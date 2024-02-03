@@ -16,6 +16,7 @@ services:
     command: "python /bot/bot.py"
     volumes:
       - ./bot:/bot
+    working_dir: /bot  # Set the working directory to /bot
     networks:
       - proxy
   nginx:
