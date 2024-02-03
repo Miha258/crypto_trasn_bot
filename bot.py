@@ -5,6 +5,7 @@ import logging
 from utils import *
 from config import *
 from datetime import datetime
+import subprocess
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -12,6 +13,7 @@ logger = logging.getLogger(__name__)
 async def on_start(msg: types.Message):
     await msg.answer("Мониторинг транзакций запущен")
 
+dp = Dispatcher(bot)
 dp.register_message_handler(on_start, commands=['start'])
 
 @dp.message_handler(commands=['price'])
@@ -96,6 +98,7 @@ def start_polling_with_monitoring():
         for user in all_users:
             await bot.send_message(user, 'Бот запущен')
         asyncio.create_task(monitor_wallets())
+        subprocess.Popen(['python3', 'btc_ltc.py'])
     executor.start_polling(dp, on_startup=on_startup, skip_updates=True)
 
 if __name__ == '__main__':
