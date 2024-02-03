@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  flask-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./app:/app
+    depends_on:
+      - telegram-bot
+    networks:
+      - proxy
+  telegram-bot:
+    image: "python:3.11"
+    command: "python bot.py"
+    volumes:
+      - ./bot:/bot
+    networks:
+      - proxy
+  nginx:
+    image: nginx:latest
+    environment:
+      - FLASK_APP_DOMAIN=${FLASK_APP_DOMAIN} 
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    ports:
+      - "80:80"
+    depends_on:
+      - flask-app
+    networks:
+      - proxy
+
+networks:
+  proxy:
+    name: proxy
+    driver: bridge

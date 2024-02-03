@@ -1,0 +1,5 @@
+aiohttp
+pygsheets
+oauth2client
+Flask
+aiogram
