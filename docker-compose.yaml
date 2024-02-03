@@ -9,13 +9,11 @@ services:
       - "5000:5000"
     volumes:
       - ./app:/app
-    depends_on:
-      - telegram-bot
     networks:
       - proxy
   telegram-bot:
     image: "python:3.11"
-    command: "python bot.py"
+    command: "python /bot/bot.py"
     volumes:
       - ./bot:/bot
     networks:
@@ -23,7 +21,7 @@ services:
   nginx:
     image: nginx:latest
     environment:
-      - FLASK_APP_DOMAIN=${FLASK_APP_DOMAIN} 
+      - FLASK_APP_DOMAIN=${FLASK_APP_DOMAIN}
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
     ports:
@@ -32,6 +30,8 @@ services:
       - flask-app
     networks:
       - proxy
+    extra_hosts:
+      - "flask-app:flask-app"
 
 networks:
   proxy:
