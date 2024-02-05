@@ -29,11 +29,11 @@ async def cmd_price(message: types.Message):
         crypto_symbol = args[1].upper()
         price = await get_crypto_rate(crypto_symbol)
         if price is not None:
-            await message.reply(f"The current price of {crypto_symbol} is ${price}")
+            await message.reply(f"Текущая цена на {crypto_symbol}: ${price}")
         else:
-            await message.reply(f"Failed to fetch the price of {crypto_symbol}")
+            await message.reply(f"Не удалось получить цену {crypto_symbol}")
     else:
-        await message.reply("Usage: /price <crypto_symbol>")
+        await message.reply("Применение: /price <crypto_symbol>")
 
 
 @dp.message_handler(commands=['start'], state = "*")
@@ -58,7 +58,7 @@ async def get_wallets(message: types.Message, state: FSMContext):
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
     buttons = ["LTC", "BTC", "USDT_TRC20"]
     keyboard.add(*buttons)
-    await message.answer("Виберіть тип кошелька:", reply_markup=keyboard)
+    await message.answer("Выберите тип кошелька:", reply_markup=keyboard)
     await state.set_state(Form.COIN)
 
 
@@ -68,13 +68,13 @@ async def process_coin(message: types.Message, state: FSMContext):
         data['coin'] = message.text
 
     await state.set_state(Form.WALLET_ADDRESS)
-    await message.answer('Введіть адрес кошелька:')
+    await message.answer('Введите адрес кошелька:')
 
 
 @dp.message_handler(text = 'Удалить')
 async def remove_wallets(message: types.Message, state: FSMContext):
     await state.set_state(Form.REMOVE_ADDRESS)
-    await message.answer('Введіть адрес кошелька, который хотите удалить:')
+    await message.answer('Введите адрес кошелька, который хотите удалить:')
 
 
 @dp.message_handler(state=Form.REMOVE_ADDRESS)
