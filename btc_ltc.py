@@ -29,7 +29,7 @@ async def hello_world():
         'amount_usd': amount_usd,
         'date': date
     }
-    if transaction_data['tx_hash'] not in get_last_transaction(crypto, wallet):
+    if transaction_data['tx_hash'] != get_last_transaction(crypto, wallet):
         update_transaction(crypto, wallet, transaction_data['tx_hash'])
         user_chat_ids = incoming_users if 'Пополнения' else outgoing_users
         for chat_id in user_chat_ids:
