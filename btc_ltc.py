@@ -1,6 +1,7 @@
 from flask import Flask, request
 from utils import *
 import json
+from aiogram import types
 from config import wallets_to_monitor, bot
 
 app = Flask(__name__)
@@ -31,8 +32,7 @@ async def hello_world():
     }
     if transaction_data['tx_hash'] != get_last_transaction(crypto, wallet):
         update_transaction(crypto, wallet, transaction_data['tx_hash'])
-        user_chat_ids = incoming_users if 'Пополнения' else outgoing_users
-        for chat_id in user_chat_ids:
+        for chat_id in users:
             try:
                 message = f"""
     📥<strong>Номенр транзакции:</strong>
@@ -50,8 +50,12 @@ async def hello_world():
 
     💲<strong>Стоимость:</strong>{transaction_data['amount_usd']} USD
                             """
-                await bot.send_message(chat_id, message, parse_mode = "html")
-                export_to_google_sheets(transaction_data)
+                sub_kb = types.InlineKeyboardMarkup(inline_keyboard=[[
+                    types.InlineKeyboardButton('Подписать', callback_data = f"subscribe_{transaction_data['tx_hash']}")
+                ]])
+                if chat_id in sub_admins and transaction_data['type'] == 'Перевод':
+                    sub_kb = None
+                await bot.send_message(chat_id, message, parse_mode = "html", reply_markup = sub_kb)
             except Exception as e:
                 print(e)
                 return {'error': e}

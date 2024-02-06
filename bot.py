@@ -15,6 +15,7 @@ class Form(StatesGroup):
     COIN = State()
     WALLET_ADDRESS = State()
     REMOVE_ADDRESS = State()
+    TRANSACTION_TEXT = State()
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -40,20 +41,19 @@ async def cmd_price(message: types.Message):
 async def cmd_start(message: types.Message, state: FSMContext):
     await state.finish()
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    buttons = ["Подписать", "Удалить", "Список"]
+    buttons = ["Добавить", "Удалить", "Список"]
     keyboard.add(*buttons)
-    await message.answer("Меню:", reply_markup=keyboard)
+    if message.from_id in admins:
+        await message.answer("Меню:", reply_markup=keyboard)
 
-
-@dp.message_handler(text = 'Список')
+@dp.message_handler(IsAdminFilter(), text = 'Список')
 async def get_wallets(message: types.Message):
     text = ""
-    
     for key, wallets in wallets_to_monitor.items():
         text += f"\n\n<strong>{key}</strong>" + "\n" + "\n\n".join([f"<code><i>{wallet}</i></code>" for wallet in wallets])
     await message.answer(text, parse_mode = 'html')
 
-@dp.message_handler(text = 'Подписать')
+@dp.message_handler(IsAdminFilter(), text = 'Добавить')
 async def get_wallets(message: types.Message, state: FSMContext):
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
     buttons = ["LTC", "BTC", "USDT_TRC20"]
@@ -62,7 +62,7 @@ async def get_wallets(message: types.Message, state: FSMContext):
     await state.set_state(Form.COIN)
 
 
-@dp.message_handler(lambda message: message.text in ["LTC", "BTC", "USDT_TRC20"], state=Form.COIN)
+@dp.message_handler(IsAdminFilter(), lambda message: message.text in ["LTC", "BTC", "USDT_TRC20"], state=Form.COIN)
 async def process_coin(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['coin'] = message.text
@@ -71,13 +71,12 @@ async def process_coin(message: types.Message, state: FSMContext):
     await message.answer('Введите адрес кошелька:')
 
 
-@dp.message_handler(text = 'Удалить')
+@dp.message_handler(IsAdminFilter(), text = 'Удалить')
 async def remove_wallets(message: types.Message, state: FSMContext):
     await state.set_state(Form.REMOVE_ADDRESS)
     await message.answer('Введите адрес кошелька, который хотите удалить:')
 
-
-@dp.message_handler(state=Form.REMOVE_ADDRESS)
+@dp.message_handler(IsAdminFilter(), state=Form.REMOVE_ADDRESS)
 async def remove_wallets(message: types.Message, state: FSMContext):
     address = message.text
     found = False
@@ -100,7 +99,7 @@ async def remove_wallets(message: types.Message, state: FSMContext):
     else:
         await message.answer('Адрес не найден.Попробуйте еще раз')
 
-@dp.message_handler(state=Form.WALLET_ADDRESS)
+@dp.message_handler(IsAdminFilter(), state=Form.WALLET_ADDRESS)
 async def process_wallet_address(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         coin_type = data['coin']
@@ -123,6 +122,29 @@ async def process_wallet_address(message: types.Message, state: FSMContext):
             await message.answer(f'Адрес кошелька для <strong>{coin_type}</strong> успешно добавлен в список: <strong>{wallet_address}</strong>', parse_mode = "html")
             await state.finish()
 
+
+@dp.callback_query_handler(lambda cb: 'subscribe' in cb.data)
+async def subscribe_transaction(callback_query: types.CallbackQuery, state: FSMContext):
+    trans_id = callback_query.data.split('_')[-1]
+    if get_transaction(trans_id):
+        await state.set_data({'trans_id': trans_id})
+        await state.set_state(Form.TRANSACTION_TEXT)
+        await callback_query.message.answer('Введите текст тразакции:')
+    else:
+        await callback_query.answer('Тразакцию подписал уже кто-то другой.', show_alert = True)
+        await callback_query.message.delete_reply_markup()
+
+@dp.message_handler(state=Form.TRANSACTION_TEXT)
+async def save_transaction(message: types.Message, state: FSMContext):
+    comment = message.text
+    data = await state.get_data()
+    transaction_data = get_transaction(data['trans_id'])
+    transaction_data['comment'] = comment
+
+    unregister_transaction(data['trans_id'])
+    export_to_google_sheets(transaction_data)
+
+
 async def monitor_wallets():
     while True:
         for crypto, wallets in wallets_to_monitor.items():
@@ -130,10 +152,11 @@ async def monitor_wallets():
                 transaction_data = await get_transaction_data(crypto, wallet)
                 if transaction_data and transaction_data['tx_hash'] != get_last_transaction(crypto, wallet):
                     update_transaction(crypto, wallet, transaction_data['tx_hash'])
-                    user_chat_ids = incoming_users if 'Пополнения' else outgoing_users
-                    for chat_id in user_chat_ids:
+                    for chat_id in users:
                         try:
                             message = f"""
+📘<em><strong>Тип: </strong>{transaction_data['type']}</em>
+
 📥<strong>Номенр транзакции:</strong>
 <pre><em>{transaction_data['tx_hash']}</em></pre>
 
@@ -143,17 +166,20 @@ async def monitor_wallets():
 
 📮<strong>Айди транзакции:</strong><pre>{transaction_data['tx_id']}</pre>
 
-📘<strong>Тип: </strong>{transaction_data['type']}
-
 💰<strong>Количество:</strong>{transaction_data['amount']} {crypto}
 
 💲<strong>Стоимость:</strong>{transaction_data['amount_usd']} USD
-                        """
-                            await bot.send_message(chat_id, message, parse_mode = "html")
-                            export_to_google_sheets(transaction_data)
+                        """ 
+                            sub_kb = types.InlineKeyboardMarkup(inline_keyboard=[[
+                                types.InlineKeyboardButton('Подписать', callback_data = f"subscribe_{transaction_data['tx_hash']}")
+                            ]])
+                            if chat_id in sub_admins and transaction_data['type'] == 'Перевод':
+                                sub_kb = None
+                            await bot.send_message(chat_id, message, parse_mode = "html", reply_markup = sub_kb)
+                            register_transaction(transaction_data['tx_hash'], transaction_data)
                         except Exception as e:
                             print(e)
-        await asyncio.sleep(60)  # Проверка каждую минуту
+        await asyncio.sleep(60)
 
 async def get_transaction_data(crypto, wallet):
     try:
@@ -188,8 +214,7 @@ async def get_transaction_data(crypto, wallet):
 
 def start_polling_with_monitoring():
     async def on_startup(dp):
-        all_users = set(incoming_users + outgoing_users)
-        for user in all_users:
+        for user in users:
             await bot.send_message(user, 'Бот запущен')
         asyncio.create_task(monitor_wallets())
         subprocess.Popen(['python3', 'btc_ltc.py'])

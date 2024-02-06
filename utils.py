@@ -1,8 +1,12 @@
 import pickle, os, pygsheets
 from config import *
 import aiohttp
+from aiogram.types import Message
+from aiogram.dispatcher.filters import BoundFilter
 
 gc = pygsheets.authorize(service_file=CREDENTIALS_FILE)
+transactions = {}
+
 def export_to_google_sheets(transaction_data):
     # Открытие Google Sheets по ID
     spreadsheet = gc.open_by_key(SPREADSHEET_ID)
@@ -19,7 +23,7 @@ def export_to_google_sheets(transaction_data):
     print(worksheet.url)
     # Добавление строки данных
     worksheet.append_table(values=[
-        [transaction_data['tx_hash'], transaction_data['type'], transaction_data['amount'], transaction_data['amount_usd'], transaction_data['date']]
+        [transaction_data['tx_hash'], transaction_data['type'], transaction_data['amount'], transaction_data['amount_usd'], transaction_data['date'], transaction_data['comment']]
     ])
 
 def get_last_transaction(crypto, wallet):
@@ -32,7 +36,13 @@ def get_last_transaction(crypto, wallet):
     with open('cache.pickle', 'rb') as f:
         data = pickle.load(f)
         return data[crypto][wallet]
-    
+
+
+
+register_transaction = lambda trans_id, data: transactions.update({trans_id: data})
+get_transaction = lambda trans_id: transactions.get(trans_id)
+unregister_transaction = lambda trans_id: transactions.pop(trans_id)
+
 
 def update_transaction(crypto, wallet, hash):
     with open('cache.pickle', 'rb') as f:
@@ -61,3 +71,7 @@ async def get_crypto_rate(crypto_symbol):
     except Exception as e:
         print(f"Exception while fetching rate for {crypto_symbol}: {e}")
         return 0.0
+    
+class IsAdminFilter(BoundFilter):
+    async def check(self, message: Message) -> bool:
+        return message.from_user.id in admins
