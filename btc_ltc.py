@@ -54,7 +54,7 @@ async def hello_world():
                     sub_kb = types.InlineKeyboardMarkup(inline_keyboard=[[
                         types.InlineKeyboardButton('Подписать', callback_data = f"subscribe_{transaction_data['date']}")
                     ]])
-                    if chat_id in sub_admins and transaction_data['type'] == 'Перевод':
+                    if str(chat_id) in admins and transaction_data['type'] == 'Перевод':
                         sub_kb = None
                     await bot.send_message(chat_id, message, parse_mode = "html", reply_markup = sub_kb)
                     register_transaction(transaction_data['date'], transaction_data)

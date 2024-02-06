@@ -74,4 +74,4 @@ async def get_crypto_rate(crypto_symbol):
     
 class IsAdminFilter(BoundFilter):
     async def check(self, message: Message) -> bool:
-        return message.from_user.id in admins
+        return str(message.from_user.id) in su_admins

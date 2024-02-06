@@ -43,17 +43,18 @@ async def cmd_start(message: types.Message, state: FSMContext):
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
     buttons = ["Добавить", "Удалить", "Список"]
     keyboard.add(*buttons)
-    if message.from_id in admins:
+    print(str(message.from_id) in admins, str(message.from_id), admins)
+    if str(message.from_id) in su_admins:
         await message.answer("Меню:", reply_markup=keyboard)
 
-@dp.message_handler(IsAdminFilter(), text = 'Список')
+@dp.message_handler(IsAdminFilter(), lambda m: m.text == 'Список')
 async def get_wallets(message: types.Message):
     text = ""
     for key, wallets in wallets_to_monitor.items():
         text += f"\n\n<strong>{key}</strong>" + "\n" + "\n\n".join([f"<code><i>{wallet}</i></code>" for wallet in wallets])
     await message.answer(text, parse_mode = 'html')
 
-@dp.message_handler(IsAdminFilter(), text = 'Добавить')
+@dp.message_handler(IsAdminFilter(), lambda m: m.text == 'Добавить')
 async def get_wallets(message: types.Message, state: FSMContext):
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
     buttons = ["LTC", "BTC", "USDT_TRC20"]
@@ -62,7 +63,7 @@ async def get_wallets(message: types.Message, state: FSMContext):
     await state.set_state(Form.COIN)
 
 
-@dp.message_handler(IsAdminFilter(), lambda message: message.text in ["LTC", "BTC", "USDT_TRC20"], state=Form.COIN)
+@dp.message_handler(IsAdminFilter(), lambda m: m.text in ["LTC", "BTC", "USDT_TRC20"], state=Form.COIN)
 async def process_coin(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['coin'] = message.text
@@ -71,7 +72,7 @@ async def process_coin(message: types.Message, state: FSMContext):
     await message.answer('Введите адрес кошелька:')
 
 
-@dp.message_handler(IsAdminFilter(), text = 'Удалить')
+@dp.message_handler(IsAdminFilter(), lambda m: m.text == 'Удалить')
 async def remove_wallets(message: types.Message, state: FSMContext):
     await state.set_state(Form.REMOVE_ADDRESS)
     await message.answer('Введите адрес кошелька, который хотите удалить:')
@@ -175,7 +176,7 @@ async def monitor_wallets():
                             sub_kb = types.InlineKeyboardMarkup(inline_keyboard=[[
                                 types.InlineKeyboardButton('Подписать', callback_data = f"subscribe_{transaction_data['date']}")
                             ]])
-                            if chat_id in sub_admins and transaction_data['type'] == 'Перевод':
+                            if str(chat_id) in admins and transaction_data['type'] == 'Перевод':
                                 sub_kb = None
                             await bot.send_message(chat_id, message, parse_mode = "html", reply_markup = sub_kb)
                             register_transaction(transaction_data['date'], transaction_data)
