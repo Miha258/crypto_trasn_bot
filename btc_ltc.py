@@ -51,11 +51,12 @@ async def hello_world():
     💲<strong>Стоимость:</strong>{transaction_data['amount_usd']} USD
                             """
                 sub_kb = types.InlineKeyboardMarkup(inline_keyboard=[[
-                    types.InlineKeyboardButton('Подписать', callback_data = f"subscribe_{transaction_data['tx_hash']}")
+                    types.InlineKeyboardButton('Подписать', callback_data = f"subscribe_{transaction_data['date']}")
                 ]])
                 if chat_id in sub_admins and transaction_data['type'] == 'Перевод':
                     sub_kb = None
                 await bot.send_message(chat_id, message, parse_mode = "html", reply_markup = sub_kb)
+                register_transaction(transaction_data['date'], transaction_data)
             except Exception as e:
                 print(e)
                 return {'error': e}

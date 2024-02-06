@@ -127,7 +127,7 @@ async def process_wallet_address(message: types.Message, state: FSMContext):
 async def subscribe_transaction(callback_query: types.CallbackQuery, state: FSMContext):
     trans_id = callback_query.data.split('_')[-1]
     if get_transaction(trans_id):
-        await state.set_data({'trans_id': trans_id})
+        await state.set_data({'trans_id': trans_id, "msg_id": callback_query.message.message_id})
         await state.set_state(Form.TRANSACTION_TEXT)
         await callback_query.message.answer('Введите текст тразакции:')
     else:
@@ -140,9 +140,11 @@ async def save_transaction(message: types.Message, state: FSMContext):
     data = await state.get_data()
     transaction_data = get_transaction(data['trans_id'])
     transaction_data['comment'] = comment
-
+    await bot.edit_message_reply_markup(message.from_id, data['msg_id'], reply_markup = None)
     unregister_transaction(data['trans_id'])
     export_to_google_sheets(transaction_data)
+    await message.answer('Тразакция успешно подписана и сохранена!')
+    await state.finish()
 
 
 async def monitor_wallets():
@@ -153,7 +155,7 @@ async def monitor_wallets():
                 if transaction_data and transaction_data['tx_hash'] != get_last_transaction(crypto, wallet):
                     update_transaction(crypto, wallet, transaction_data['tx_hash'])
                     for chat_id in users:
-                        try:
+                        # try:
                             message = f"""
 📘<em><strong>Тип: </strong>{transaction_data['type']}</em>
 
@@ -171,14 +173,14 @@ async def monitor_wallets():
 💲<strong>Стоимость:</strong>{transaction_data['amount_usd']} USD
                         """ 
                             sub_kb = types.InlineKeyboardMarkup(inline_keyboard=[[
-                                types.InlineKeyboardButton('Подписать', callback_data = f"subscribe_{transaction_data['tx_hash']}")
+                                types.InlineKeyboardButton('Подписать', callback_data = f"subscribe_{transaction_data['date']}")
                             ]])
                             if chat_id in sub_admins and transaction_data['type'] == 'Перевод':
                                 sub_kb = None
                             await bot.send_message(chat_id, message, parse_mode = "html", reply_markup = sub_kb)
-                            register_transaction(transaction_data['tx_hash'], transaction_data)
-                        except Exception as e:
-                            print(e)
+                            register_transaction(transaction_data['date'], transaction_data)
+                        # except Exception as e:
+                        #     print(e)
         await asyncio.sleep(60)
 
 async def get_transaction_data(crypto, wallet):
