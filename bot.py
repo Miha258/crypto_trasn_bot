@@ -156,8 +156,8 @@ async def monitor_wallets():
                     print(transaction_data['tx_hash'], get_last_transaction(crypto, wallet))
                     if transaction_data['tx_hash'] != get_last_transaction(crypto, wallet):
                         update_transaction(crypto, wallet, transaction_data['tx_hash'])
+                        transaction_data['wallet'] = wallet
                         for chat_id in users:
-                            transaction_data['wallet'] = wallet
                             try:
                                 message = f"""
     📘<em><strong>Тип: </strong>{transaction_data['type']}</em>

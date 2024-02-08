@@ -34,6 +34,7 @@ async def hello_world():
         }
         if transaction_data['tx_hash'] != get_last_transaction(crypto, wallet):
             update_transaction(crypto, wallet, transaction_data['tx_hash'])
+            transaction_data['wallet'] = wallet
             for chat_id in users:
                 try:
                     message = f"""
