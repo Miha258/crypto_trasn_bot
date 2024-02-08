@@ -2,5 +2,6 @@ config.py
 test.py
 iaccountant-403317-a7542fa63cc3.json
 hooks.py
-cache.pickle
+hashes.pickle
 ./__pycache__
+transactions.pickle

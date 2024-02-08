@@ -17,6 +17,7 @@ def find_transaction(data):
 
 @app.route('/', methods = ['POST'])
 async def hello_world():
+    global transactions
     data = json.loads(request.get_data().decode('utf-8'))
     type, crypto, wallet, last_tx = find_transaction(data)
     if last_tx.get('value'):
@@ -36,21 +37,21 @@ async def hello_world():
             for chat_id in users:
                 try:
                     message = f"""
-        📥<strong>Номенр транзакции:</strong>
-        <pre><em>{transaction_data['tx_hash']}</em></pre>
+📘<em><strong>Тип: </strong>{transaction_data['type']}</em>
 
-        🕰️<strong>Время:</strong><pre>{transaction_data['date']}</pre>
+📥<strong>Номенр транзакции:</strong>
+<pre><em>{transaction_data['tx_hash']}</em></pre>
 
-        📭<strong>Адрес:</strong><pre>{wallet}</pre>
+🕰️<strong>Время:</strong><pre>{transaction_data['date']}</pre>
 
-        📮<strong>Айди транзакции:</strong><pre>{transaction_data['tx_id']}</pre>
+📭<strong>Адрес:</strong><pre>{wallet}</pre>
 
-        📘<strong>Тип: </strong>{transaction_data['type']}
+📮<strong>Айди транзакции:</strong><pre>{transaction_data['tx_id']}</pre>
 
-        💰<strong>Количество:</strong>{transaction_data['amount']} {crypto}
+💰<strong>Количество:</strong>{transaction_data['amount']} {crypto}
 
-        💲<strong>Стоимость:</strong>{transaction_data['amount_usd']} USD
-                                """
+💲<strong>Стоимость:</strong>{transaction_data['amount_usd']} USD
+                    """ 
                     sub_kb = types.InlineKeyboardMarkup(inline_keyboard=[[
                         types.InlineKeyboardButton('Подписать', callback_data = f"subscribe_{transaction_data['date']}")
                     ]])

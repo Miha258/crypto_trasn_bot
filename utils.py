@@ -5,8 +5,6 @@ from aiogram.types import Message
 from aiogram.dispatcher.filters import BoundFilter
 
 gc = pygsheets.authorize(service_file=CREDENTIALS_FILE)
-transactions = {}
-
 def export_to_google_sheets(transaction_data):
     # Открытие Google Sheets по ID
     spreadsheet = gc.open_by_key(SPREADSHEET_ID)
@@ -23,34 +21,55 @@ def export_to_google_sheets(transaction_data):
     print(worksheet.url)
     # Добавление строки данных
     worksheet.append_table(values=[
-        [transaction_data['tx_hash'], transaction_data['type'], transaction_data['amount'], transaction_data['amount_usd'], transaction_data['date'], transaction_data['comment']]
+        [transaction_data['date'], transaction_data['wallet'], transaction_data['type'], transaction_data['tx_id'], transaction_data['amount'], transaction_data['amount_usd'], transaction_data['comment']]
     ])
 
+def register_transaction(trans_id, trans_data):
+    if not os.path.exists('transactions.pickle'):
+        with open('transactions.pickle', 'wb') as f:
+            pickle.dump({}, f)
+
+    with open('transactions.pickle', 'rb') as f:
+        data = pickle.load(f)
+    
+    data[trans_id] = trans_data
+
+    with open('transactions.pickle', 'wb') as f:
+        data = pickle.dump(data, f)
+
+def check_transaction(trans_id):
+    with open('transactions.pickle', 'rb') as f:
+        data = pickle.load(f)
+    return data[trans_id]
+
+def unregister_transaction(trans_id):
+    with open('transactions.pickle', 'rb') as f:
+        data = pickle.load(f)
+    
+    del data[trans_id]
+
+    with open('transactions.pickle', 'wb') as f:
+        data = pickle.dump(data, f)
+
 def get_last_transaction(crypto, wallet):
-    if not os.path.exists('cache.pickle'):
+    if not os.path.exists('hashes.pickle'):
         last_transaction_hashes = {crypto: {wallet: "" for wallet in wallets} for crypto, wallets in wallets_to_monitor.items()}
-        with open('cache.pickle', 'wb') as f:
+        with open('hashes.pickle', 'wb') as f:
             pickle.dump(last_transaction_hashes, f)
             return None
 
-    with open('cache.pickle', 'rb') as f:
+    with open('hashes.pickle', 'rb') as f:
         data = pickle.load(f)
         return data[crypto][wallet]
 
 
-
-register_transaction = lambda trans_id, data: transactions.update({trans_id: data})
-get_transaction = lambda trans_id: transactions.get(trans_id)
-unregister_transaction = lambda trans_id: transactions.pop(trans_id)
-
-
 def update_transaction(crypto, wallet, hash):
-    with open('cache.pickle', 'rb') as f:
+    with open('hashes.pickle', 'rb') as f:
         data = pickle.load(f)
     
     data[crypto][wallet] = hash
 
-    with open('cache.pickle', 'wb') as f:
+    with open('hashes.pickle', 'wb') as f:
         data = pickle.dump(data, f)
         
 async def get_crypto_rate(crypto_symbol):

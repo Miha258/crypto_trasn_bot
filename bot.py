@@ -43,7 +43,6 @@ async def cmd_start(message: types.Message, state: FSMContext):
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
     buttons = ["Добавить", "Удалить", "Список"]
     keyboard.add(*buttons)
-    print(str(message.from_id) in admins, str(message.from_id), admins)
     if str(message.from_id) in su_admins:
         await message.answer("Меню:", reply_markup=keyboard)
 
@@ -127,7 +126,7 @@ async def process_wallet_address(message: types.Message, state: FSMContext):
 @dp.callback_query_handler(lambda cb: 'subscribe' in cb.data)
 async def subscribe_transaction(callback_query: types.CallbackQuery, state: FSMContext):
     trans_id = callback_query.data.split('_')[-1]
-    if get_transaction(trans_id):
+    if check_transaction(trans_id):
         await state.set_data({'trans_id': trans_id, "msg_id": callback_query.message.message_id})
         await state.set_state(Form.TRANSACTION_TEXT)
         await callback_query.message.answer('Введите текст тразакции:')
@@ -139,7 +138,7 @@ async def subscribe_transaction(callback_query: types.CallbackQuery, state: FSMC
 async def save_transaction(message: types.Message, state: FSMContext):
     comment = message.text
     data = await state.get_data()
-    transaction_data = get_transaction(data['trans_id'])
+    transaction_data = check_transaction(data['trans_id'])
     transaction_data['comment'] = comment
     await bot.edit_message_reply_markup(message.from_id, data['msg_id'], reply_markup = None)
     unregister_transaction(data['trans_id'])
@@ -153,35 +152,38 @@ async def monitor_wallets():
         for crypto, wallets in wallets_to_monitor.items():
             for wallet in wallets:
                 transaction_data = await get_transaction_data(crypto, wallet)
-                if transaction_data and transaction_data['tx_hash'] != get_last_transaction(crypto, wallet):
-                    update_transaction(crypto, wallet, transaction_data['tx_hash'])
-                    for chat_id in users:
-                        # try:
-                            message = f"""
-📘<em><strong>Тип: </strong>{transaction_data['type']}</em>
+                if transaction_data:
+                    print(transaction_data['tx_hash'], get_last_transaction(crypto, wallet))
+                    if transaction_data['tx_hash'] != get_last_transaction(crypto, wallet):
+                        update_transaction(crypto, wallet, transaction_data['tx_hash'])
+                        for chat_id in users:
+                            transaction_data['wallet'] = wallet
+                            try:
+                                message = f"""
+    📘<em><strong>Тип: </strong>{transaction_data['type']}</em>
 
-📥<strong>Номенр транзакции:</strong>
-<pre><em>{transaction_data['tx_hash']}</em></pre>
+    📥<strong>Номенр транзакции:</strong>
+    <pre><em>{transaction_data['tx_hash']}</em></pre>
 
-🕰️<strong>Время:</strong><pre>{transaction_data['date']}</pre>
+    🕰️<strong>Время:</strong><pre>{transaction_data['date']}</pre>
 
-📭<strong>Адрес:</strong><pre>{wallet}</pre>
+    📭<strong>Адрес:</strong><pre>{wallet}</pre>
 
-📮<strong>Айди транзакции:</strong><pre>{transaction_data['tx_id']}</pre>
+    📮<strong>Айди транзакции:</strong><pre>{transaction_data['tx_id']}</pre>
 
-💰<strong>Количество:</strong>{transaction_data['amount']} {crypto}
+    💰<strong>Количество:</strong>{transaction_data['amount']} {crypto}
 
-💲<strong>Стоимость:</strong>{transaction_data['amount_usd']} USD
-                        """ 
-                            sub_kb = types.InlineKeyboardMarkup(inline_keyboard=[[
-                                types.InlineKeyboardButton('Подписать', callback_data = f"subscribe_{transaction_data['date']}")
-                            ]])
-                            if str(chat_id) in admins and transaction_data['type'] == 'Перевод':
-                                sub_kb = None
-                            await bot.send_message(chat_id, message, parse_mode = "html", reply_markup = sub_kb)
-                            register_transaction(transaction_data['date'], transaction_data)
-                        # except Exception as e:
-                        #     print(e)
+    💲<strong>Стоимость:</strong>{transaction_data['amount_usd']} USD
+                            """ 
+                                sub_kb = types.InlineKeyboardMarkup(inline_keyboard=[[
+                                    types.InlineKeyboardButton('Подписать', callback_data = f"subscribe_{transaction_data['date']}")
+                                ]])
+                                if str(chat_id) in admins and transaction_data['type'] == 'Перевод':
+                                    sub_kb = None
+                                await bot.send_message(chat_id, message, parse_mode = "html", reply_markup = sub_kb)
+                                register_transaction(transaction_data['date'], transaction_data)
+                            except Exception as e:
+                                print(e)
         await asyncio.sleep(60)
 
 async def get_transaction_data(crypto, wallet):
