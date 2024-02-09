@@ -18,20 +18,19 @@ def find_transaction(data):
 @app.route('/', methods = ['POST'])
 async def hello_world():
     try:
-        global transactions
         data = json.loads(request.get_data().decode('utf-8'))
         type, crypto, wallet, last_tx = find_transaction(data)
         if last_tx.get('value'):
             amount = last_tx['value'] / 10**8 
             amount_usd = amount * await get_crypto_rate(crypto)
-            date = data['received']
+            date = data['received'].replace('T', ' ').split('.')[0]
             transaction_data = {
                 'tx_hash': data['hash'],
                 'tx_id': last_tx['script'],
                 'type': 'Пополнение' if type == 'outputs' else 'Перевод',
                 'amount': amount,
                 'amount_usd': amount_usd,
-                'date': date.replace('T', ' ').split('.')[0]
+                'date': date
             }
             if transaction_data['tx_hash'] != get_last_transaction(crypto, wallet):
                 update_transaction(crypto, wallet, transaction_data['tx_hash'])
