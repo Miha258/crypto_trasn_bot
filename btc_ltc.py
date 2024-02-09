@@ -31,7 +31,7 @@ async def hello_world():
                 'type': 'Пополнение' if type == 'outputs' else 'Перевод',
                 'amount': amount,
                 'amount_usd': amount_usd,
-                'date': date
+                'date': date.replace('T', ' ').split('.')[0]
             }
             if transaction_data['tx_hash'] != get_last_transaction(crypto, wallet):
                 update_transaction(crypto, wallet, transaction_data['tx_hash'])
