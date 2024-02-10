@@ -26,7 +26,6 @@ async def hello_world():
             date = data['received'].replace('T', ' ').split('.')[0]
             transaction_data = {
                 'tx_hash': data['hash'],
-                'tx_id': last_tx['script'],
                 'type': 'Пополнение' if type == 'outputs' else 'Перевод',
                 'amount': amount,
                 'amount_usd': amount_usd,
@@ -38,20 +37,18 @@ async def hello_world():
                 for chat_id in users:
                     try:
                         message = f"""
-    📘<em><strong>Тип: </strong>{transaction_data['type']}</em>
+📘<em><strong>Тип: </strong>{transaction_data['type']}</em>
 
-    📥<strong>Номенр транзакции:</strong>
-    <pre><em>{transaction_data['tx_hash']}</em></pre>
+📮<strong>Хеш транзакции:</strong>
+<code><pre><em>{transaction_data['tx_hash']}</em></pre></code>
 
-    🕰️<strong>Время:</strong><pre>{transaction_data['date']}</pre>
+🕰️<strong>Время:</strong><code><pre>{transaction_data['date']}</pre></code>
 
-    📭<strong>Адрес:</strong><pre>{wallet}</pre>
+📭<strong>Адрес:</strong><code><pre>{wallet}</pre></code>
 
-    📮<strong>Айди транзакции:</strong><pre>{transaction_data['tx_id']}</pre>
+💰<strong>Количество:</strong>{transaction_data['amount']} {crypto}
 
-    💰<strong>Количество:</strong>{transaction_data['amount']} {crypto}
-
-    💲<strong>Стоимость:</strong>{transaction_data['amount_usd']} USD
+💲<strong>Стоимость:</strong>{transaction_data['amount_usd']} USD
                         """ 
                         sub_kb = types.InlineKeyboardMarkup(inline_keyboard=[[
                             types.InlineKeyboardButton('Подписать', callback_data = f"subscribe_{transaction_data['date']}")

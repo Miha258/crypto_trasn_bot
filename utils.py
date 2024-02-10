@@ -21,7 +21,7 @@ def export_to_google_sheets(transaction_data):
     print(worksheet.url)
     # Добавление строки данных
     worksheet.append_table(values=[
-        [transaction_data['date'], transaction_data['wallet'], transaction_data['type'], transaction_data['tx_id'], transaction_data['amount'], transaction_data['amount_usd'], transaction_data['comment']]
+        [transaction_data['date'], transaction_data['wallet'], transaction_data['type'], transaction_data['tx_hash'], transaction_data['amount'], transaction_data['amount_usd'], transaction_data['comment']]
     ])
 
 def register_transaction(trans_id, trans_data):
