@@ -153,8 +153,7 @@ async def monitor_wallets():
             for wallet in wallets:
                 transaction_data = await get_transaction_data(crypto, wallet)
                 if transaction_data:
-                    print(transaction_data['tx_hash'], get_last_transaction(crypto, wallet))
-                    if transaction_data['tx_hash'] != get_last_transaction(crypto, wallet):
+                    if transaction_data['tx_hash'] != get_last_transaction(crypto, wallet) and transaction_data['token'] in ('USDT', 'USDT_TRC20'):
                         update_transaction(crypto, wallet, transaction_data['tx_hash'])
                         transaction_data['wallet'] = wallet
                         for chat_id in users:
@@ -169,7 +168,7 @@ async def monitor_wallets():
 
 📭<strong>Адрес:</strong><code><pre>{wallet}</pre></code>
 
-💰<strong>Количество:</strong>{transaction_data['amount']} {crypto}
+💰<strong>Количество:</strong>{transaction_data['amount']} {transaction_data['token']}
 
 💲<strong>Стоимость:</strong>{transaction_data['amount_usd']} USD
                             """ 
@@ -186,7 +185,7 @@ async def monitor_wallets():
 
 async def get_transaction_data(crypto, wallet):
     try:
-        if crypto in ["USDT_TRC20"]:
+        if crypto in ["USDT_TRC20", 'TRX']:
             url = f'https://apilist.tronscan.org/api/transaction?sort=-timestamp&count=true&limit=1&start=0&address={wallet}'
             headers = {
                 'TRON-Pro-API-KEY': tronscan_api_key,
@@ -207,7 +206,8 @@ async def get_transaction_data(crypto, wallet):
                             'type': 'Пополнение' if 'to' in last_tx['contractData'] and last_tx['contractData']['to'] == wallet else 'Перевод',
                             'amount': amount,
                             'amount_usd': amount_usd,
-                            'date': formatted_date
+                            'date': formatted_date,
+                            'token': last_tx['tokenInfo']['tokenAbbr'].upper()
                         }
                     else:
                         print(f"Unexpected content type: {response.content_type}")
