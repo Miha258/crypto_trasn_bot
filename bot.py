@@ -1,4 +1,4 @@
-from aiogram import types, executor
+from aiogram import types, executor, Dispatcher
 import aiohttp
 import asyncio
 import logging
@@ -217,7 +217,10 @@ async def get_transaction_data(crypto, wallet):
 def start_polling_with_monitoring():
     async def on_startup(dp):
         for user in users:
-            await bot.send_message(user, 'Бот запущен')
+            try:
+                await bot.send_message(user, 'Бот запущен')
+            except Exception as e:
+                print(f'Error: {e}')
         asyncio.create_task(monitor_wallets())
         subprocess.Popen(['python3', 'btc_ltc.py'])
     executor.start_polling(dp, on_startup=on_startup, skip_updates=True)
