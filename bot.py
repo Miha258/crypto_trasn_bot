@@ -153,7 +153,7 @@ async def monitor_wallets():
             for wallet in wallets:
                 transaction_data = await get_transaction_data(crypto, wallet)
                 if transaction_data:
-                    if transaction_data['tx_hash'] != get_last_transaction(crypto, wallet) and transaction_data['token'] in ('USDT', 'USDT_TRC20'):
+                    if transaction_data['tx_hash'] != get_last_transaction(crypto, wallet): #and transaction_data['token'] in ('USDT', 'USDT_TRC20'):
                         update_transaction(crypto, wallet, transaction_data['tx_hash'])
                         transaction_data['wallet'] = wallet
                         for chat_id in users:
@@ -185,29 +185,29 @@ async def monitor_wallets():
 
 async def get_transaction_data(crypto, wallet):
     try:
-        if crypto in ["USDT_TRC20", 'TRX']:
-            url = f'https://apilist.tronscan.org/api/transaction?sort=-timestamp&count=true&limit=1&start=0&address={wallet}'
+        if crypto in ["USDT_TRC20"]:
+            url = f'https://apilist.tronscanapi.com/api/filter/trc20/transfers?limit=1&start=0&sort=-timestamp&count=true&filterTokenValue=0&relatedAddress={wallet}'
             headers = {
                 'TRON-Pro-API-KEY': tronscan_api_key,
             }
             async with aiohttp.ClientSession() as session:
                 async with session.get(url, headers=headers) as response:
                     data = await response.json()
-                    if data.get('data'):
-                        last_tx = data['data'][0]
-                        amount = int(last_tx['contractData']['amount']) / 10**6  # Convert to USDT
+                    if data.get('token_transfers'):
+                        last_tx = data['token_transfers'][0]
+                        amount = int(last_tx['quant']) / 10**6  # Convert to USDT
                         amount_usd = amount 
                         
-                        timestamp_seconds = last_tx['timestamp'] / 1000  # convert to seconds
+                        timestamp_seconds = last_tx['block_ts'] / 1000  # convert to seconds
                         dt_object = datetime.utcfromtimestamp(timestamp_seconds)
                         formatted_date = dt_object.strftime('%Y-%m-%dT%H:%M:%S')
                         return {
-                            'tx_hash': last_tx.get('hash', 'Unknown'),
-                            'type': 'Пополнение' if 'to' in last_tx['contractData'] and last_tx['contractData']['to'] == wallet else 'Перевод',
+                            'tx_hash': last_tx.get('transaction_id', 'Unknown'),
+                            'type': 'Пополнение' if last_tx['to_address'] == wallet else 'Перевод',
                             'amount': amount,
                             'amount_usd': amount_usd,
                             'date': formatted_date,
-                            'token': last_tx['tokenInfo']['tokenAbbr'].upper()
+                            'token': last_tx['tokenInfo']['tokenAbbr']
                         }
                     else:
                         print(f"Unexpected content type: {response.content_type}")
