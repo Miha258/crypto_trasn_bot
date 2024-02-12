@@ -59,7 +59,7 @@ async def hello_world():
                         register_transaction(transaction_data['date'], transaction_data)
                     except Exception as e:
                         print(e)
-                        return {'error': e}
+                        continue
             return transaction_data
     except:
         return {'error': 400}
