@@ -200,7 +200,7 @@ async def get_transaction_data(crypto, wallet):
                         
                         timestamp_seconds = last_tx['block_ts'] / 1000  # convert to seconds
                         dt_object = datetime.utcfromtimestamp(timestamp_seconds)
-                        formatted_date = dt_object.strftime('%Y-%m-%dT%H:%M:%S')
+                        formatted_date = dt_object.strftime('%Y-%m-%d %H:%M:%S')
                         return {
                             'tx_hash': last_tx.get('transaction_id', 'Unknown'),
                             'type': 'Пополнение' if last_tx['to_address'] == wallet else 'Перевод',
