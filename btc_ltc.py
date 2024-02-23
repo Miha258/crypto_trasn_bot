@@ -14,7 +14,7 @@ def find_transaction(data):
                     if output["addresses"][0] == wallet:
                         return type, crypto, wallet, output
 
-
+hashes = []
 @app.route('/', methods = ['POST'])
 async def hello_world():
     try:
@@ -31,7 +31,8 @@ async def hello_world():
                 'amount_usd': amount_usd,
                 'date': date
             }
-            if transaction_data['tx_hash'] != get_last_transaction(crypto, wallet) and not check_transaction(transaction_data['date']):
+            if transaction_data['tx_hash'] != get_last_transaction(crypto, wallet) and transaction_data['tx_hash'] not in hashes:
+                hashes.append(transaction_data['tx_hash'])
                 update_transaction(crypto, wallet, transaction_data['tx_hash'])
                 transaction_data['wallet'] = wallet
                 for chat_id in users:
