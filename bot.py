@@ -153,7 +153,7 @@ async def monitor_wallets():
             for wallet in wallets:
                 transaction_data = await get_transaction_data(crypto, wallet)
                 if transaction_data:
-                    if transaction_data['tx_hash'] != get_last_transaction(crypto, wallet): #and transaction_data['token'] in ('USDT', 'USDT_TRC20'):
+                    if transaction_data['tx_hash'] != get_last_transaction(crypto, wallet):
                         update_transaction(crypto, wallet, transaction_data['tx_hash'])
                         transaction_data['wallet'] = wallet
                         for chat_id in users:

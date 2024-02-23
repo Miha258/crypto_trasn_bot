@@ -39,7 +39,7 @@ def register_transaction(trans_id, trans_data):
 def check_transaction(trans_id):
     with open('transactions.pickle', 'rb') as f:
         data = pickle.load(f)
-    return data[trans_id]
+    return data.get(trans_id)
 
 def unregister_transaction(trans_id):
     with open('transactions.pickle', 'rb') as f:

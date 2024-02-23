@@ -31,7 +31,7 @@ async def hello_world():
                 'amount_usd': amount_usd,
                 'date': date
             }
-            if transaction_data['tx_hash'] != get_last_transaction(crypto, wallet):
+            if transaction_data['tx_hash'] != get_last_transaction(crypto, wallet) and not check_transaction(transaction_data['date']):
                 update_transaction(crypto, wallet, transaction_data['tx_hash'])
                 transaction_data['wallet'] = wallet
                 for chat_id in users:
