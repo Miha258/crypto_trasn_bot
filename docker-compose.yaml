@@ -26,3 +26,6 @@ networks:
   proxy:
     name: proxy
     driver: bridge
+
+volumes:
+  wallet_data:
