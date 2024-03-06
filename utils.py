@@ -104,7 +104,7 @@ def udpated_wallets_to_monitor(crypto: str, wallets: list):
     data[crypto] = wallets
 
     with open('wallets.json', 'w') as f:
-        data = json.dumps(f)
+        data = json.dump(f)
     return data
     
 
