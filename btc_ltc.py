@@ -32,6 +32,8 @@ async def hello_world():
                 'date': date
             }
             if transaction_data['tx_hash'] != get_last_transaction(crypto, wallet) and transaction_data['tx_hash'] not in hashes:
+                if len(hashes) > 100:
+                    hashes.clear()
                 hashes.append(transaction_data['tx_hash'])
                 update_transaction(crypto, wallet, transaction_data['tx_hash'])
                 transaction_data['wallet'] = wallet
@@ -61,7 +63,9 @@ async def hello_world():
                     except Exception as e:
                         print(e)
                         continue
+                return transaction_data
             return transaction_data
+        return {'error': 400}
     except:
         return {'error': 400}
 

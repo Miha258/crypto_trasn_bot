@@ -2,6 +2,7 @@ import pickle, os, pygsheets
 from config import *
 import aiohttp
 from aiogram.types import Message
+import json
 from aiogram.dispatcher.filters import BoundFilter
 
 gc = pygsheets.authorize(service_file=CREDENTIALS_FILE)
@@ -52,7 +53,7 @@ def unregister_transaction(trans_id):
 
 def get_last_transaction(crypto, wallet):
     if not os.path.exists('hashes.pickle'):
-        last_transaction_hashes = {crypto: {wallet: "" for wallet in wallets} for crypto, wallets in wallets_to_monitor.items()}
+        last_transaction_hashes = {crypto: {wallet: "" for wallet in wallets} for crypto, wallets in get_wallets_to_monitor().items()}
         with open('hashes.pickle', 'wb') as f:
             pickle.dump(last_transaction_hashes, f)
             return None
@@ -90,6 +91,23 @@ async def get_crypto_rate(crypto_symbol):
         print(f"Exception while fetching rate for {crypto_symbol}: {e}")
         return 0.0
     
+
+def get_wallets_to_monitor() -> dict[str, list]:
+    with open('wallets.json', 'r') as f:
+        data = json.load(f)
+    return data
+
+def udpated_wallets_to_monitor(crypto: str, wallets: list):
+    with open('wallets.json', 'r') as f:
+        data = json.load(f)
+
+    data[crypto] = wallets
+
+    with open('wallets.json', 'w') as f:
+        data = json.dumps(f)
+    return data
+    
+
 class IsAdminFilter(BoundFilter):
     async def check(self, message: Message) -> bool:
         return str(message.from_user.id) in su_admins

@@ -9,6 +9,7 @@ services:
       - "5000:5000"
     networks:
       - proxy
+      - wallet_data:/app/data
   nginx:
     image: nginx:latest
     volumes:

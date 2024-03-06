@@ -49,7 +49,7 @@ async def cmd_start(message: types.Message, state: FSMContext):
 @dp.message_handler(IsAdminFilter(), lambda m: m.text == 'Список')
 async def get_wallets(message: types.Message):
     text = ""
-    for key, wallets in wallets_to_monitor.items():
+    for key, wallets in get_wallets_to_monitor().items():
         text += f"\n\n<strong>{key}</strong>" + "\n" + "\n\n".join([f"<code><i>{wallet}</i></code>" for wallet in wallets])
     await message.answer(text, parse_mode = 'html')
 
@@ -80,7 +80,7 @@ async def remove_wallets(message: types.Message, state: FSMContext):
 async def remove_wallets(message: types.Message, state: FSMContext):
     address = message.text
     found = False
-    for key, wallets in wallets_to_monitor.items():
+    for key, wallets in get_wallets_to_monitor().items():
         for wallet in wallets:
             if address == wallet:
                 found = True
@@ -91,7 +91,7 @@ async def remove_wallets(message: types.Message, state: FSMContext):
                             unsubscribe_from_webhook(webhook_id, blockcypher_token, key.lower())
                 udpated_wallets = wallets
                 udpated_wallets.remove(wallet)
-                wallets_to_monitor[key] = udpated_wallets
+                udpated_wallets_to_monitor(key, udpated_wallets)
 
     if found:
         await message.answer('Адрес успешно удален')
@@ -105,6 +105,7 @@ async def process_wallet_address(message: types.Message, state: FSMContext):
         coin_type = data['coin']
         wallet_address = message.text
 
+        wallets_to_monitor = get_wallets_to_monitor()
         if wallet_address in wallets_to_monitor[coin_type]:
             await message.answer('Такой адрес уже есть в списке.Попробуйте другой:')
         else:
@@ -118,7 +119,8 @@ async def process_wallet_address(message: types.Message, state: FSMContext):
                     )
                 except:
                     return await message.answer(f'Неверный адрес кошелька для <strong>{coin_type}</strong>.Попробуйте другой:', parse_mode = "html")
-            wallets_to_monitor[coin_type].append(wallet_address)
+            updated_wallets = [*wallets_to_monitor[coin_type], wallet_address]
+            udpated_wallets_to_monitor(coin_type, updated_wallets)
             await message.answer(f'Адрес кошелька для <strong>{coin_type}</strong> успешно добавлен в список: <strong>{wallet_address}</strong>', parse_mode = "html")
             await state.finish()
 
@@ -149,7 +151,7 @@ async def save_transaction(message: types.Message, state: FSMContext):
 
 async def monitor_wallets():
     while True:
-        for crypto, wallets in wallets_to_monitor.items():
+        for crypto, wallets in get_wallets_to_monitor().items():
             for wallet in wallets:
                 transaction_data = await get_transaction_data(crypto, wallet)
                 if transaction_data:
