@@ -2,14 +2,14 @@ from flask import Flask, request
 from utils import *
 import json
 from aiogram import types
-from config import wallets_to_monitor, bot
+from config import bot
 
 app = Flask(__name__)
 def find_transaction(data):
     types = ("inputs", "outputs")
     for type in types:
         for output in data[type]:
-            for crypto, wallets in wallets_to_monitor.items():
+            for crypto, wallets in get_wallets_to_monitor().items():
                 for wallet in wallets:
                     if output["addresses"][0] == wallet:
                         return type, crypto, wallet, output
