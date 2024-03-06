@@ -20,6 +20,8 @@ async def hello_world():
     try:
         data = json.loads(request.get_data().decode('utf-8'))
         type, crypto, wallet, last_tx = find_transaction(data)
+        print(1)
+        print(last_tx.get('value'))
         if last_tx.get('value'):
             amount = last_tx['value'] / 10**8 
             amount_usd = amount * await get_crypto_rate(crypto)
@@ -31,6 +33,8 @@ async def hello_world():
                 'amount_usd': amount_usd,
                 'date': date
             }
+            print(2)
+            print(transaction_data['tx_hash'] != get_last_transaction(crypto, wallet), transaction_data['tx_hash'] not in hashes)
             if transaction_data['tx_hash'] != get_last_transaction(crypto, wallet) and transaction_data['tx_hash'] not in hashes:
                 if len(hashes) > 100:
                     hashes.clear()
