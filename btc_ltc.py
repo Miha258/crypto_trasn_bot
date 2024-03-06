@@ -69,8 +69,10 @@ async def hello_world():
                         continue
                 return transaction_data
             return transaction_data
+        print('Error')
         return {'error': 400}
-    except:
+    except Exception as e:
+        print('Error', e)
         return {'error': 400}
 
 if __name__ == '__main__':
