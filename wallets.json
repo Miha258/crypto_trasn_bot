@@ -1,5 +1,1 @@
-{
-    "BTC": ["19DRbQcwK2RYiXfXhW5pppmdfm4bchBJ2M", "bc1qed0utxhyzuczwxhe5dtk9fdsxhz0dr4n4de48p", "bc1qzhtz0dmsl45pyl3sc3nzvgqy6cf9esk4yp85kd"],
-    "LTC": ["ltc1qg87vxwjx3hwgma9cjnuaf8460649s0qdvq07du", "ltc1qg87vxwjx3hwgma9cjnuaf8460649s0qdvq07du", "ltc1qd6eqphnk0tu8fe6jf5p2qyur2djz8jdnuqev38"],
-    "USDT_TRC20": ["TThbuXDxgpxvDNCnGgjKtYyHMqTTpXmo9p", "TFDTbejwKFft6LHapPB4MBYYRdpUdaGNWb", "TJCg8p9oXJyL6v6MN3uKeVbV17pqAFpGbN"]
-}
+{"BTC": ["bc1qed0utxhyzuczwxhe5dtk9fdsxhz0dr4n4de48p", "bc1qzhtz0dmsl45pyl3sc3nzvgqy6cf9esk4yp85kd", "bc1qkctkj4fw6u2drt5fazhwmq8da9amqwdus69tpg", "bc1qdc7aalyfkuw342nkafqh4pw8cyatp4eftfz743"], "LTC": ["ltc1qg87vxwjx3hwgma9cjnuaf8460649s0qdvq07du", "ltc1qd6eqphnk0tu8fe6jf5p2qyur2djz8jdnuqev38", "ltc1q4nrruuskhyzs0vepdkt6c86t4d9ur8q30nemeq", "ltc1q09f3t48nhemmqd98zyaaj8pc7rwsswlvpq3250"], "USDT_TRC20": ["TFDTbejwKFft6LHapPB4MBYYRdpUdaGNWb", "TTNq2KPsH49ns1adjqLwSS5n8bQCfV6ibz", "TLsmcPtQerv3QChWz72VoB4rfYLP6XL3p2"]}
